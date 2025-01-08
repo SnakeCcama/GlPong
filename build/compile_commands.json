@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/ennom/Desktop/OpenGL/Pong/build",
+  "command": "/usr/bin/clang++ -g -g -o CMakeFiles/glPong.dir/src/main.cpp.o -c /home/ennom/Desktop/OpenGL/Pong/src/main.cpp",
+  "file": "/home/ennom/Desktop/OpenGL/Pong/src/main.cpp",
+  "output": "CMakeFiles/glPong.dir/src/main.cpp.o"
+}
+]
