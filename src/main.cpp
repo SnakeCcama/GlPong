@@ -1,6 +1,8 @@
 #include <iostream>
+
 #include "includes/gl.h"
 #include "includes/gl.c"
+
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,6 +14,20 @@
 float width = 800, height = 600;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
 void processInput(GLFWwindow* window);
+
+
+float vertices[] = {
+    // first triangle
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f,  0.5f, 0.0f,  // top left
+    -0.5f, -0.5f, 0.0f,  // bottom left
+}; 
+
+unsigned int indices[] = {
+    0,1,3, //first triangle
+    1,2,3   //second triangle
+};
 
 int main ()
 {
