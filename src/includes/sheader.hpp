@@ -38,7 +38,7 @@ class Shader
         {
             //open source code
             vsFile.open(vsPath);
-            fsPath.open(fsPath);
+            fsFile.open(fsPath);
 
             //write to string stream
             vsStream << vsFile.rdbuf();
@@ -83,7 +83,7 @@ class Shader
         glShaderSource(frag, 1, &fShCode, NULL);
         glCompileShader(frag);
         
-        glGetShaderiv(frag, GL_COMPILE_STATUS, &success):
+        glGetShaderiv(frag, GL_COMPILE_STATUS, &success);
         if(!success)
         {
             glGetShaderInfoLog(frag, 512, NULL, infoLog);
@@ -117,7 +117,35 @@ class Shader
     /*uniform setter functions (depends on value type you want to set)
     these member functions are const-qualified (barred from modifying variables)*/
 
+    void setBool(const std::string &name, bool value) const
+    {
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+    }
 
+    void setInt(const std::string &name, int value) const
+    {
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), value );
+    }
+
+    void setFloat(const std::string &name, float value) const
+    {
+        glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+    }
+
+    void setVec3(const std::string &name, const glm::vec3 &vec) const
+    {
+        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &vec[0]);
+    }
+
+    void setMat4(const std::string &name, const glm::mat4 &mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+
+    void setthisMat4(const std::string &name, const glm::mat4 &mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat));
+    }
 
     void cleanUp()
     {
