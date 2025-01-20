@@ -14,12 +14,17 @@
 
 
 float width = 800, height = 600;
-glm::vec3 color = glm::vec3(0.0, 0.5, 0.0);
+glm::vec3 lcolor = glm::vec3(0.0, 0.5, 0.0);
+glm::vec3 rcolor = glm::vec3(0.0, 0.2, 0.5);
 float deltaTime = 0.0f, lastFrame = 0.0f;
-float paddleY = 0.0f, paddleSpeed = 2.0f;
+float paddleY = 0.0f, paddleSpeed = 2.5f;
+float deltaTime1 = 0.0f, lastFrame1 = 0.0f;
+float paddleY1 = 0.0f;
 
-
-
+void drawBall(std::vector <float>& vertices, std::vector<int>& indices);
+std::vector<float> genCircle(float radius, int sectorCount);
+std::vector<int> genIndices(int sectorCount);
+void p2Move(Shader& myShader, GLFWwindow* window);
 void pMove(Shader& myShader, GLFWwindow* window);
 void paddleSet(Shader& myShader, GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -28,6 +33,14 @@ void processInput(GLFWwindow* window);
 
 
 std::vector<float> vertices = {
+    // first triangle
+     0.5f,  0.5f, 0.0f,  // top right
+     0.5f, -0.5f, 0.0f,  // bottom right
+    -0.5f,  0.5f, 0.0f,  // top left
+    -0.5f, -0.5f, 0.0f,  // bottom left
+}; 
+
+std::vector <float> vertices1 = {
     // first triangle
      0.5f,  0.5f, 0.0f,  // top right
      0.5f, -0.5f, 0.0f,  // bottom right
@@ -69,9 +82,15 @@ int main ()
 
     //callback function for window resizing
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+
+    //Ball stuff
+    std::vector<float> ballVertices = genCircle(0.0125, 100);
+    std::vector<int> ballIndices = genIndices(100);
     
     Shader myShader("/home/ennom/Desktop/OpenGL/Pong/src/shaders/shader0.vert", "/home/ennom/Desktop/OpenGL/Pong/src/shaders/shader0.frag");
-    
+    Shader mypaddleShader("/home/ennom/Desktop/OpenGL/Pong/src/shaders/shader1.vert", "/home/ennom/Desktop/OpenGL/Pong/src/shaders/shader1.frag");
+    Shader myballShader("/home/ennom/Desktop/OpenGL/Pong/src/shaders/shader2.vert", "/home/ennom/Desktop/OpenGL/Pong/src/shaders/shader2.frag");
     
     
 
@@ -82,9 +101,19 @@ int main ()
         glClear(GL_COLOR_BUFFER_BIT);
         
         myShader.Use();
-        myShader.setVec3("padColor", color);
+        myShader.setVec3("padColor", lcolor);
         pMove(myShader, window);
         drawPaddle(vertices, indices);
+
+        mypaddleShader.Use();
+        mypaddleShader.setVec3("padColor", rcolor);
+        p2Move(mypaddleShader, window);
+        drawPaddle(vertices1, indices);
+
+        myballShader.Use();
+        myballShader.setVec3("padColor", lcolor);
+        drawBall(ballVertices, ballIndices);
+        
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -159,5 +188,106 @@ void pMove(Shader& myShader, GLFWwindow* window)
     move = glm::scale(move, glm::vec3(0.02f, 0.20f, 0.0f));
 
     myShader.setthisMat4("model", move);
+}
+
+
+void p2Move(Shader& myShader, GLFWwindow* window)
+{
+
+    float currentTime = glfwGetTime();
+    float deltaTime1 = currentTime - lastFrame1;
+    lastFrame1 = currentTime;
+
+    
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        paddleY1 += paddleSpeed * deltaTime1;  // Move paddle up
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        paddleY1 -= paddleSpeed * deltaTime1;  // Move paddle down   
+    }
+
+    glm::mat4 move = glm::mat4(1.0f);
+    move = glm::translate(move, glm::vec3(0.0f, paddleY1, 0.0f));
+    move = glm::translate(move, glm::vec3(0.8f, 0.0f, 0.0f));
+    move = glm::scale(move, glm::vec3(0.02f, 0.20f, 0.0f));
+
+    myShader.setthisMat4("modelM", move);
+
+}
+
+std::vector<float> genCircle(float radius, int sectorCount)
+{
+
+    std::vector<float> vertices;
+
+    float sectorStep = 2 * M_PI/sectorCount;
+    float sectorAngle;
+
+    vertices.push_back(0.0);
+    vertices.push_back(0.0);
+    vertices.push_back(0.0);
+
+    for(int i= 0; i<= sectorCount; ++i)
+    {
+        sectorAngle = i * sectorStep;
+        float x = radius * cos(sectorAngle);
+        float y = radius * sin(sectorAngle);
+        float z = 0;
+
+        vertices.push_back(x);
+        vertices.push_back(y);
+        vertices.push_back(z);
+
+    }
+
+    return vertices;
+}
+
+std::vector<int> genIndices(int sectorCount)
+{
+    std::vector<int>indices;
+
+    for(int i = 0; i< sectorCount; ++i)
+    {
+        indices.push_back(0);
+        indices.push_back(i + 1);
+        indices.push_back(i + 2);
+    }
+
+    return indices;
+}
+
+void  drawBall(std::vector <float>& vertices, std::vector<int>& indices)
+{
+
+
+    GLuint vaoId;
+    glGenVertexArrays(1, &vaoId);
+    glBindVertexArray(vaoId);
+
+    GLuint vboId;
+    glGenBuffers( 1, &vboId);
+    glBindBuffer(GL_ARRAY_BUFFER, vboId);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+
+    GLuint iboId;
+    glGenBuffers(1, &iboId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+    glBindVertexArray(0);
+
+    //glDeleteBuffers(1, &txVBO);
+    glDeleteBuffers(1, &vboId);
+    glDeleteBuffers(1, &iboId);
+    glDeleteVertexArrays(1, &vaoId); 
+
+
 }
 
