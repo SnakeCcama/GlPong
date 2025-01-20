@@ -17,14 +17,17 @@ float width = 800, height = 600;
 glm::vec3 lcolor = glm::vec3(0.0, 0.5, 0.0);
 glm::vec3 rcolor = glm::vec3(0.0, 0.2, 0.5);
 float deltaTime = 0.0f, lastFrame = 0.0f;
-float paddleY = 0.0f, paddleSpeed = 2.5f;
+float paddleY = 0.0f, paddleX= -0.8f, paddleSpeed = 2.5f;
 float deltaTime1 = 0.0f, lastFrame1 = 0.0f;
-float paddleY1 = 0.0f;
+float paddleY1 = 0.0f, paddleX1 = 0.8f;
+float movex = 0.0f, lastFrameB = 0.0f, ballSpeed = 0.5f;
+float ballX = 0.0f, ballY = 0.0f;
 
+void ballMove(Shader& myShader);
 void drawBall(std::vector <float>& vertices, std::vector<int>& indices);
 std::vector<float> genCircle(float radius, int sectorCount);
 std::vector<int> genIndices(int sectorCount);
-void p2Move(Shader& myShader, GLFWwindow* window);
+void p2Move(Shader& myPaddleShader, GLFWwindow* window);
 void pMove(Shader& myShader, GLFWwindow* window);
 void paddleSet(Shader& myShader, GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -102,7 +105,7 @@ int main ()
         
         myShader.Use();
         myShader.setVec3("padColor", lcolor);
-        pMove(myShader, window);
+        pMove(myShader,window);
         drawPaddle(vertices, indices);
 
         mypaddleShader.Use();
@@ -112,7 +115,9 @@ int main ()
 
         myballShader.Use();
         myballShader.setVec3("padColor", lcolor);
+        ballMove(myballShader);
         drawBall(ballVertices, ballIndices);
+        
         
 
         glfwSwapBuffers(window);
@@ -183,15 +188,14 @@ void pMove(Shader& myShader, GLFWwindow* window)
     }
 
     glm::mat4 move = glm::mat4(1.0f);
-    move = glm::translate(move, glm::vec3(0.0f, paddleY, 0.0f));
-    move = glm::translate(move, glm::vec3(-0.8f, 0.0f, 0.0f));
+    move = glm::translate(move, glm::vec3(paddleX, paddleY, 0.0f));
     move = glm::scale(move, glm::vec3(0.02f, 0.20f, 0.0f));
 
     myShader.setthisMat4("model", move);
 }
 
 
-void p2Move(Shader& myShader, GLFWwindow* window)
+void p2Move(Shader& myPaddleShader, GLFWwindow* window)
 {
 
     float currentTime = glfwGetTime();
@@ -207,11 +211,10 @@ void p2Move(Shader& myShader, GLFWwindow* window)
     }
 
     glm::mat4 move = glm::mat4(1.0f);
-    move = glm::translate(move, glm::vec3(0.0f, paddleY1, 0.0f));
-    move = glm::translate(move, glm::vec3(0.8f, 0.0f, 0.0f));
+    move = glm::translate(move, glm::vec3(paddleX1, paddleY1, 0.0f));
     move = glm::scale(move, glm::vec3(0.02f, 0.20f, 0.0f));
 
-    myShader.setthisMat4("modelM", move);
+    myPaddleShader.setthisMat4("modelM", move);
 
 }
 
@@ -289,5 +292,31 @@ void  drawBall(std::vector <float>& vertices, std::vector<int>& indices)
     glDeleteVertexArrays(1, &vaoId); 
 
 
+}
+
+void ballMove(Shader& myShader)
+{
+    glm::vec3 ballpos = glm::vec3(ballX, ballY, 0.0f);
+    
+    float currentTime = glfwGetTime();
+    float deltaTime = currentTime - lastFrameB;
+    lastFrameB = currentTime;
+    ballX += deltaTime * ballSpeed;
+    
+    glm::mat4 move = glm::mat4(1.0f);
+    
+    if ( ballSpeed > 0 && paddleX1 - ballX <= 0.01)
+    {
+        ballSpeed = ballSpeed * -1;
+    }
+
+    else if (ballSpeed < 0 && abs(paddleX - ballX) <= 0.01)
+    {
+        ballSpeed = ballSpeed * -1; 
+    }
+
+    move= glm::translate(move, ballpos);
+    
+    myShader.setthisMat4("ballMove", move);
 }
 
